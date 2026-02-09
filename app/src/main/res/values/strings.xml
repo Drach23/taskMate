@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">taskMate</string>
+    <!--DEVELOPMENT CREDENTIALS-->
+    <string name="app_name">TaskMate</string>
+    <string name="developer">Diego Aquino</string>
+    <string name="development">Desarrollado por: </string>
+    <string name="version">1.0.0</string>
 </resources>
