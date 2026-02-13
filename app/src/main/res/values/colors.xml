@@ -2,7 +2,14 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
     <color name="taskmateSplashBg">#494266</color>
+    <color name="purple_dark">#494266</color>
+    <!--transparecy of 30% for modal windows-->
+    <color name="purple_modal">#3A0D5E</color>
+    <color name="purple_background">#7C79B8</color>
+    <color name="off_white">#F4F4FA</color>
+
 
 
 </resources>
