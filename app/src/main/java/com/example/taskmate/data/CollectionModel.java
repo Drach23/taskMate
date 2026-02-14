@@ -12,9 +12,12 @@ public class CollectionModel {
     private String title;
     private int quantity;
 
-    public CollectionModel(String title, int quantity){
+    private String color;
+
+    public CollectionModel(String title, int quantity, String color){
         this.title = title;
         this.quantity = quantity;
+        this.color = color;
     }
 
     public int getId() { return id; }
@@ -22,5 +25,14 @@ public class CollectionModel {
 
     public String getTitle() { return title; }
     public int getQuantity() { return quantity; }
+
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
 }
 

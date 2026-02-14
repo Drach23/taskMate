@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <EditText
+        android:id="@+id/etCollectionName"
+        android:hint="Nombre de la colección"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLength="120"
+        android:inputType="textMultiLine"
+        android:maxLines="4"/>
+
+    <Spinner
+        android:id="@+id/spinnerColor"
+        android:layout_marginTop="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</LinearLayout>

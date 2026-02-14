@@ -5,10 +5,27 @@
 
     <color name="taskmateSplashBg">#494266</color>
     <color name="purple_dark">#494266</color>
+
     <!--transparecy of 30% for modal windows-->
     <color name="purple_modal">#3A0D5E</color>
     <color name="purple_background">#7C79B8</color>
     <color name="off_white">#F4F4FA</color>
+
+
+    <!--Colors for Collection background-->
+    <color name="purple_collection_bg">#220471</color>
+    <color name="blue_collection_bg">#003566</color>
+    <color name="red_collection_bg">#8B111E</color>
+    <color name="green_collection_bg">#2E413D</color>
+    <color name="orange_collection_bg">#BB4802</color>
+
+    <!--colors for Collections texts-->
+    <color name="purple_collections_txt">#D9DAEC</color>
+    <color name="blue_collection_txt">#D2F1FF</color>
+    <color name="red_collection_txt">#FFDFE2</color>
+    <color name="green_collection_txt">#DEE9E5</color>
+    <color name="orange_collection_txt">#FFE385</color>
+
 
 
 

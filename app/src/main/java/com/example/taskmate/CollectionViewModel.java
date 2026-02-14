@@ -39,4 +39,11 @@ public class CollectionViewModel extends AndroidViewModel {
     public void insert(CollectionModel collection) {
         executor.execute(() -> db.collectionDao().insert(collection));
     }
+
+    public void delete(CollectionModel collection) {
+        new Thread(() -> {
+            db.collectionDao().delete(collection);
+        }).start();
+    }
+
 }
