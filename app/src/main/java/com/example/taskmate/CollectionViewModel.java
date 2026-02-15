@@ -5,7 +5,6 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.room.Room;
 
 import com.example.taskmate.data.AppDatabase;
 import com.example.taskmate.data.CollectionModel;
@@ -23,11 +22,8 @@ public class CollectionViewModel extends AndroidViewModel {
     public CollectionViewModel(@NonNull Application application) {
         super(application);
 
-        db = Room.databaseBuilder(
-                application,
-                AppDatabase.class,
-                "taskmate_database"
-        ).build();
+        // USA TU SINGLETON, no Room.databaseBuilder aquí
+        db = AppDatabase.getInstance(application);
 
         collections = db.collectionDao().getAllCollections();
     }
@@ -36,14 +32,25 @@ public class CollectionViewModel extends AndroidViewModel {
         return collections;
     }
 
+    public LiveData<CollectionModel> getCollection(int id) {
+        return db.collectionDao().getCollection(id);
+    }
+
     public void insert(CollectionModel collection) {
-        executor.execute(() -> db.collectionDao().insert(collection));
+        executor.execute(() ->
+                db.collectionDao().insert(collection)
+        );
+    }
+
+    public void update(CollectionModel collection) {
+        executor.execute(() ->
+                db.collectionDao().update(collection)
+        );
     }
 
     public void delete(CollectionModel collection) {
-        new Thread(() -> {
-            db.collectionDao().delete(collection);
-        }).start();
+        executor.execute(() ->
+                db.collectionDao().delete(collection)
+        );
     }
-
 }
