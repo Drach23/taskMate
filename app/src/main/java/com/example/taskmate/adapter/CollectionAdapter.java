@@ -21,10 +21,22 @@ public class CollectionAdapter
 
     private List<CollectionModel> data = new ArrayList<>();
 
-    // 🔹 Interface para Long Click
+    // Interface para Long Click
     public interface OnCollectionLongClickListener {
         void onLongClick(CollectionModel collection, int position);
     }
+    //interface para click simple
+    public interface OnCollectionClickListener {
+        void onClick(CollectionModel collection);
+    }
+
+    private OnCollectionClickListener clickListener;
+
+    public void setOnCollectionClickListener(OnCollectionClickListener listener) {
+        this.clickListener = listener;
+    }
+
+
 
     private OnCollectionLongClickListener longClickListener;
 
@@ -56,13 +68,26 @@ public class CollectionAdapter
 
         applyTheme(holder, collection.getColor());
 
-        // 🔹 Long click listener
-        holder.itemView.setOnLongClickListener(v -> {
+        // Long click listener
+        holder.cardView.setOnLongClickListener(v -> {
             if (longClickListener != null) {
                 longClickListener.onLongClick(collection, position);
             }
             return true;
         });
+
+        //simple click listener
+        holder.cardView.setOnClickListener(v -> {
+
+            int currentPosition = holder.getBindingAdapterPosition();
+
+            if (currentPosition == RecyclerView.NO_POSITION) return;
+
+            if (clickListener != null) {
+                clickListener.onClick(data.get(currentPosition));
+            }
+        });
+
     }
 
     private void applyTheme(CollectionViewHolder holder, String theme) {
