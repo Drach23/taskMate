@@ -1,5 +1,6 @@
 package com.example.taskmate;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -14,6 +15,7 @@ import com.example.taskmate.data.AppDatabase;
 import com.example.taskmate.data.TaskModel;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -23,7 +25,7 @@ public class TaskDetailActivity extends AppCompatActivity {
     private AppDatabase database;
     private TaskModel currentTask;
 
-    private TextView tvTitle;
+    private EditText etTitle;
     private TextView tvDate;
     private EditText etDescription;
     private CheckBox checkCompleted;
@@ -31,6 +33,7 @@ public class TaskDetailActivity extends AppCompatActivity {
     private Button btnDelete;
 
     private int taskId;
+    private long selectedDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +42,7 @@ public class TaskDetailActivity extends AppCompatActivity {
 
         database = AppDatabase.getInstance(this);
 
-        tvTitle = findViewById(R.id.detailTitle);
+        etTitle = findViewById(R.id.detailTitle);
         tvDate = findViewById(R.id.detailDate);
         etDescription = findViewById(R.id.detailDescription);
         checkCompleted = findViewById(R.id.detailCompleted);
@@ -54,6 +57,8 @@ public class TaskDetailActivity extends AppCompatActivity {
         }
 
         loadTask();
+
+        tvDate.setOnClickListener(v -> openDatePicker());
 
         btnSave.setOnClickListener(v -> updateTask());
 
@@ -73,30 +78,67 @@ public class TaskDetailActivity extends AppCompatActivity {
                     return;
                 }
 
-                tvTitle.setText(currentTask.getTitle());
-
-                SimpleDateFormat sdf =
-                        new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-
-                tvDate.setText(
-                        sdf.format(new Date(currentTask.getDueDate()))
-                );
-
+                etTitle.setText(currentTask.getTitle());
                 etDescription.setText(currentTask.getDescription());
                 checkCompleted.setChecked(currentTask.isCompleted());
+
+                selectedDate = currentTask.getDueDate();
+
+                updateDateText();
             });
         });
+    }
+
+    private void openDatePicker() {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(selectedDate);
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+
+                    Calendar selected = Calendar.getInstance();
+                    selected.set(year, month, dayOfMonth, 0, 0, 0);
+                    selected.set(Calendar.MILLISECOND, 0);
+
+                    selectedDate = selected.getTimeInMillis();
+                    updateDateText();
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        // Bloquear fechas pasadas
+        dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+
+        dialog.show();
+    }
+
+    private void updateDateText() {
+        SimpleDateFormat sdf =
+                new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        tvDate.setText(sdf.format(new Date(selectedDate)));
     }
 
     private void updateTask() {
 
         if (currentTask == null) return;
 
+        String newTitle = etTitle.getText().toString().trim();
+
+        if (newTitle.isEmpty()) {
+            etTitle.setError("El título no puede estar vacío");
+            return;
+        }
+
+        currentTask.setTitle(newTitle);
         currentTask.setDescription(
                 etDescription.getText().toString().trim()
         );
-
         currentTask.setCompleted(checkCompleted.isChecked());
+        currentTask.setDueDate(selectedDate);
 
         Executors.newSingleThreadExecutor().execute(() ->
                 database.taskDao().update(currentTask)

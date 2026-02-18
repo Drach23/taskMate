@@ -15,14 +15,18 @@
         android:paddingBottom="32dp">
 
         <!-- Título -->
-        <TextView
+        <EditText
             android:id="@+id/detailTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="30sp"
+            android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="@color/white"
-            android:layout_marginBottom="8dp"/>
+            android:background="@android:color/transparent"
+            android:textColorHint="@color/purple_collections_txt"
+            android:hint="Título de la tarea"
+            android:layout_marginBottom="6dp"/>
+
 
         <!-- Fecha -->
         <TextView
