@@ -59,26 +59,9 @@ public class TaskViewActivity extends AppCompatActivity {
             return;
         }
 
+        // ===== VIEWMODEL =====
         viewModel = new ViewModelProvider(this)
                 .get(CollectionViewModel.class);
-
-        viewModel.getCollection(collectionId)
-                .observe(this, collection -> {
-
-                    if (collection == null) {
-                        finish();
-                        return;
-                    }
-
-                    currentCollection = collection;
-
-                    etCollectionTitle.setText(collection.getTitle());
-                    applyTheme(collection.getColor());
-                    etCollectionTitle.setBackgroundColor(backgroundColor);
-                    etCollectionTitle.setTextColor(textColor);
-                });
-
-        etCollectionTitle.setOnClickListener(v -> showEditCollectionDialog());
 
         // ===== DATABASE =====
         database = AppDatabase.getInstance(this);
@@ -90,11 +73,37 @@ public class TaskViewActivity extends AppCompatActivity {
         taskAdapter = new TaskAdapter();
         recyclerView.setAdapter(taskAdapter);
 
+        // ===== OBSERVAR COLECCIÓN =====
+        viewModel.getCollection(collectionId)
+                .observe(this, collection -> {
+
+                    if (collection == null) {
+                        finish();
+                        return;
+                    }
+
+                    currentCollection = collection;
+
+                    etCollectionTitle.setText(collection.getTitle());
+
+                    applyTheme(collection.getColor());
+
+                    etCollectionTitle.setBackgroundColor(backgroundColor);
+                    etCollectionTitle.setTextColor(textColor);
+
+                    // 🔥 AQUÍ SE PASAN LOS COLORES AL ADAPTER
+                    taskAdapter.setTheme(backgroundColor, textColor);
+                });
+
+        // ===== OBSERVAR TAREAS =====
         database.taskDao()
                 .getTasksForCollection(collectionId)
                 .observe(this, tasks -> {
                     taskAdapter.setTasks(tasks);
                 });
+
+        // ===== EDITAR COLECCIÓN =====
+        etCollectionTitle.setOnClickListener(v -> showEditCollectionDialog());
 
         // ===== FAB =====
         FloatingActionButton fab = findViewById(R.id.taskFabAdd);
@@ -108,9 +117,8 @@ public class TaskViewActivity extends AppCompatActivity {
     }
 
     // =========================
-    // ADD TASK DIALOG
+    // ADD TASK
     // =========================
-
     private void showAddTaskDialog() {
 
         View view = LayoutInflater.from(this)
@@ -118,6 +126,9 @@ public class TaskViewActivity extends AppCompatActivity {
 
         EditText etTitle = view.findViewById(R.id.etTaskTitle);
         EditText etDueDate = view.findViewById(R.id.etTaskDueDate);
+
+        etTitle.setTextColor(textColor);
+        etDueDate.setTextColor(textColor);
 
         final long[] selectedDate = {0};
 
@@ -180,7 +191,6 @@ public class TaskViewActivity extends AppCompatActivity {
     // =========================
     // EDIT COLLECTION
     // =========================
-
     private void showEditCollectionDialog() {
 
         if (currentCollection == null) return;
@@ -190,6 +200,7 @@ public class TaskViewActivity extends AppCompatActivity {
 
         View view = LayoutInflater.from(this)
                 .inflate(R.layout.dialog_modal_collection, null);
+
         builder.setView(view);
 
         EditText etName = view.findViewById(R.id.etCollectionName);
@@ -213,43 +224,33 @@ public class TaskViewActivity extends AppCompatActivity {
                 getPositionFromTheme(currentCollection.getColor())
         );
 
-        AlertDialog dialog = builder.create();
-        dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Guardar", (d, which) -> {});
-        dialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancelar", (d, which) -> d.dismiss());
+        builder.setPositiveButton("Guardar", (dialog, which) -> {
 
-        dialog.setOnShowListener(d -> {
+            String newName = etName.getText().toString().trim();
 
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                    .setOnClickListener(v -> {
+            if (newName.length() < 3) {
+                showMessage("El nombre debe tener al menos 3 caracteres");
+                return;
+            }
 
-                        String newName = etName.getText().toString().trim();
+            String newTheme =
+                    getCollectionThemeFromPosition(
+                            spinner.getSelectedItemPosition()
+                    );
 
-                        if (newName.length() < 3) {
-                            showMessage("El nombre debe tener al menos 3 caracteres");
-                            return;
-                        }
+            currentCollection.setTitle(newName);
+            currentCollection.setColor(newTheme);
 
-                        String newTheme =
-                                getCollectionThemeFromPosition(
-                                        spinner.getSelectedItemPosition()
-                                );
-
-                        currentCollection.setTitle(newName);
-                        currentCollection.setColor(newTheme);
-
-                        viewModel.update(currentCollection);
-
-                        dialog.dismiss();
-                    });
+            viewModel.update(currentCollection);
         });
 
-        dialog.show();
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
     }
 
     // =========================
     // THEME
     // =========================
-
     private void applyTheme(String theme) {
 
         switch (theme) {

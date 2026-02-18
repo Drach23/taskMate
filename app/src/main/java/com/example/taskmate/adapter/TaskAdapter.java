@@ -3,13 +3,14 @@ package com.example.taskmate.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.taskmate.R;
 import com.example.taskmate.data.TaskModel;
-import com.google.android.material.checkbox.MaterialCheckBox;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -17,17 +18,33 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import android.widget.TextView;
-
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
 
     private List<TaskModel> taskList = new ArrayList<>();
 
+    private int backgroundColor = 0;
+    private int textColor = 0;
+
+    // =========================
+    // RECIBE COLORES DESDE ACTIVITY
+    // =========================
+    public void setTheme(int bgColor, int txtColor) {
+        this.backgroundColor = bgColor;
+        this.textColor = txtColor;
+        notifyDataSetChanged();
+    }
+
+    // =========================
+    // RECIBE LISTA DE TAREAS
+    // =========================
     public void setTasks(List<TaskModel> tasks) {
         this.taskList = tasks;
         notifyDataSetChanged();
     }
 
+    // =========================
+    // CREATE VIEW HOLDER
+    // =========================
     @NonNull
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -38,44 +55,58 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         return new TaskViewHolder(view);
     }
 
+    // =========================
+    // BIND VIEW HOLDER
+    // =========================
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
 
         TaskModel task = taskList.get(position);
 
-        // Título
         holder.tvTitle.setText(task.getTitle());
 
-        // Formatear fecha (long -> dd/MM/yyyy)
+        // Formatear fecha
         SimpleDateFormat sdf =
                 new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
-        String formattedDate =
-                sdf.format(new Date(task.getDueDate()));
+        holder.tvDate.setText(
+                sdf.format(new Date(task.getDueDate()))
+        );
 
-        holder.tvDueDate.setText("Vence: " + formattedDate);
+        // 🔥 Aplicar colores SOLO si ya existen
+        if (backgroundColor != 0) {
+            holder.cardView.setCardBackgroundColor(backgroundColor);
+        }
 
-        // Estado checkbox
-        holder.checkTask.setChecked(task.isCompleted());
+        if (textColor != 0) {
+            holder.tvTitle.setTextColor(textColor);
+            holder.tvDate.setTextColor(textColor);
+        }
     }
 
+    // =========================
+    // ITEM COUNT
+    // =========================
     @Override
     public int getItemCount() {
         return taskList.size();
     }
 
+    // =========================
+    // VIEW HOLDER
+    // =========================
     static class TaskViewHolder extends RecyclerView.ViewHolder {
 
         TextView tvTitle;
-        TextView tvDueDate;
-        MaterialCheckBox checkTask;
+        TextView tvDate;
+        CardView cardView;
 
         public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
 
             tvTitle = itemView.findViewById(R.id.textTaskTitle);
-            tvDueDate = itemView.findViewById(R.id.textTaskDueDate);
-            checkTask = itemView.findViewById(R.id.checkTask);
+            tvDate = itemView.findViewById(R.id.textTaskDueDate);
+            cardView = itemView.findViewById(R.id.cardTask);
         }
     }
 }
