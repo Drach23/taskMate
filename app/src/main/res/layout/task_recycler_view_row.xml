@@ -22,7 +22,6 @@
             android:id="@+id/checkTask"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:buttonTint="@color/purple_collection_bg"
             android:layout_marginEnd="16dp" />
 
 

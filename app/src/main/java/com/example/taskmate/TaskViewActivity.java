@@ -157,6 +157,10 @@ public class TaskViewActivity extends AppCompatActivity {
                     calendar.get(Calendar.DAY_OF_MONTH)
             );
 
+            // No permitir fechas anteriores a hoy
+            datePickerDialog.getDatePicker()
+                    .setMinDate(System.currentTimeMillis() - 1000);
+
             datePickerDialog.show();
         });
 
@@ -187,6 +191,7 @@ public class TaskViewActivity extends AppCompatActivity {
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
+
 
     // =========================
     // EDIT COLLECTION

@@ -73,7 +73,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 sdf.format(new Date(task.getDueDate()))
         );
 
-        // 🔥 Aplicar colores SOLO si ya existen
+        //Aplicar colores SOLO si ya existen
         if (backgroundColor != 0) {
             holder.cardView.setCardBackgroundColor(backgroundColor);
         }

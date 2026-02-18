@@ -21,6 +21,7 @@ public interface TaskDao {
     @Delete
     void delete(TaskModel task);
 
-    @Query("SELECT * FROM tasks WHERE collectionId = :collectionId")
+    @Query("SELECT * FROM tasks WHERE collectionId = :collectionId ORDER BY dueDate ASC")
     LiveData<List<TaskModel>> getTasksForCollection(int collectionId);
+
 }
