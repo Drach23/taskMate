@@ -1,5 +1,6 @@
 package com.example.taskmate;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,8 +16,20 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.taskmate.adapter.TaskAdapter;
+import com.example.taskmate.data.AppDatabase;
 import com.example.taskmate.data.CollectionModel;
+import com.example.taskmate.data.TaskModel;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.Executors;
 
 public class TaskViewActivity extends AppCompatActivity {
 
@@ -28,6 +41,9 @@ public class TaskViewActivity extends AppCompatActivity {
 
     private EditText etCollectionTitle;
     private CollectionModel currentCollection;
+
+    private TaskAdapter taskAdapter;
+    private AppDatabase database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,12 +80,106 @@ public class TaskViewActivity extends AppCompatActivity {
 
         etCollectionTitle.setOnClickListener(v -> showEditCollectionDialog());
 
+        // ===== DATABASE =====
+        database = AppDatabase.getInstance(this);
+
+        // ===== RECYCLER =====
+        RecyclerView recyclerView = findViewById(R.id.taskRecycler);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        taskAdapter = new TaskAdapter();
+        recyclerView.setAdapter(taskAdapter);
+
+        database.taskDao()
+                .getTasksForCollection(collectionId)
+                .observe(this, tasks -> {
+                    taskAdapter.setTasks(tasks);
+                });
+
+        // ===== FAB =====
+        FloatingActionButton fab = findViewById(R.id.taskFabAdd);
+        fab.setOnClickListener(v -> showAddTaskDialog());
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
     }
+
+    // =========================
+    // ADD TASK DIALOG
+    // =========================
+
+    private void showAddTaskDialog() {
+
+        View view = LayoutInflater.from(this)
+                .inflate(R.layout.dialog_modal_task, null);
+
+        EditText etTitle = view.findViewById(R.id.etTaskTitle);
+        EditText etDueDate = view.findViewById(R.id.etTaskDueDate);
+
+        final long[] selectedDate = {0};
+
+        etDueDate.setOnClickListener(v -> {
+
+            Calendar calendar = Calendar.getInstance();
+
+            DatePickerDialog datePickerDialog = new DatePickerDialog(
+                    this,
+                    (datePicker, year, month, day) -> {
+
+                        Calendar selected = Calendar.getInstance();
+                        selected.set(year, month, day);
+
+                        selectedDate[0] = selected.getTimeInMillis();
+
+                        SimpleDateFormat sdf =
+                                new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+
+                        etDueDate.setText(
+                                sdf.format(new Date(selectedDate[0]))
+                        );
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
+            );
+
+            datePickerDialog.show();
+        });
+
+        new AlertDialog.Builder(this)
+                .setTitle("Nueva Tarea")
+                .setView(view)
+                .setPositiveButton("Guardar", (dialog, which) -> {
+
+                    String title = etTitle.getText().toString().trim();
+
+                    if (title.isEmpty() || selectedDate[0] == 0) {
+                        showMessage("Completa todos los campos");
+                        return;
+                    }
+
+                    TaskModel task = new TaskModel(
+                            title,
+                            "",
+                            selectedDate[0],
+                            false,
+                            collectionId
+                    );
+
+                    Executors.newSingleThreadExecutor().execute(() ->
+                            database.taskDao().insert(task)
+                    );
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    // =========================
+    // EDIT COLLECTION
+    // =========================
 
     private void showEditCollectionDialog() {
 
@@ -119,12 +229,6 @@ public class TaskViewActivity extends AppCompatActivity {
                             return;
                         }
 
-                        int lineCount = newName.split("\n").length;
-                        if (lineCount > 3) {
-                            showMessage("Máximo 3 saltos de línea permitidos");
-                            return;
-                        }
-
                         String newTheme =
                                 getCollectionThemeFromPosition(
                                         spinner.getSelectedItemPosition()
@@ -141,6 +245,10 @@ public class TaskViewActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
+    // =========================
+    // THEME
+    // =========================
 
     private void applyTheme(String theme) {
 

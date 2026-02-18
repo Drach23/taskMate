@@ -19,7 +19,7 @@ public interface CollectionDao {
     void delete(CollectionModel collection);
 
     @Update
-    void update(CollectionModel collection); // <-- método para actualizar
+    void update(CollectionModel collection);
 
     @Query("SELECT * FROM collections ORDER BY id DESC")
     LiveData<List<CollectionModel>> getAllCollections();
