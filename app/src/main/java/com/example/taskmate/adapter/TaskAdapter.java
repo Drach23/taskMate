@@ -26,6 +26,29 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     private int textColor = 0;
 
     // =========================
+    // CLICK INTERFACES
+    // =========================
+
+    public interface OnTaskClickListener {
+        void onClick(TaskModel task);
+    }
+
+    public interface OnTaskLongClickListener {
+        void onLongClick(TaskModel task, int position);
+    }
+
+    private OnTaskClickListener clickListener;
+    private OnTaskLongClickListener longClickListener;
+
+    public void setOnTaskClickListener(OnTaskClickListener listener) {
+        this.clickListener = listener;
+    }
+
+    public void setOnTaskLongClickListener(OnTaskLongClickListener listener) {
+        this.longClickListener = listener;
+    }
+
+    // =========================
     // RECIBE COLORES DESDE ACTIVITY
     // =========================
     public void setTheme(int bgColor, int txtColor) {
@@ -43,8 +66,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     // =========================
-    // CREATE VIEW HOLDER
-    // =========================
     @NonNull
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -56,8 +77,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     // =========================
-    // BIND VIEW HOLDER
-    // =========================
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
 
@@ -65,7 +84,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         holder.tvTitle.setText(task.getTitle());
 
-        // Formatear fecha
         SimpleDateFormat sdf =
                 new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
@@ -73,7 +91,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 sdf.format(new Date(task.getDueDate()))
         );
 
-        //Aplicar colores SOLO si ya existen
         if (backgroundColor != 0) {
             holder.cardView.setCardBackgroundColor(backgroundColor);
         }
@@ -82,18 +99,35 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             holder.tvTitle.setTextColor(textColor);
             holder.tvDate.setTextColor(textColor);
         }
+
+        // CLICK NORMAL
+        holder.cardView.setOnClickListener(v -> {
+
+            int currentPosition = holder.getBindingAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION) return;
+
+            if (clickListener != null) {
+                clickListener.onClick(taskList.get(currentPosition));
+            }
+        });
+
+        // LONG CLICK
+        holder.cardView.setOnLongClickListener(v -> {
+
+            if (longClickListener != null) {
+                longClickListener.onLongClick(task, position);
+            }
+
+            return true;
+        });
     }
 
-    // =========================
-    // ITEM COUNT
     // =========================
     @Override
     public int getItemCount() {
         return taskList.size();
     }
 
-    // =========================
-    // VIEW HOLDER
     // =========================
     static class TaskViewHolder extends RecyclerView.ViewHolder {
 

@@ -19,6 +19,8 @@
     <color name="green_collection_bg">#2E413D</color>
     <color name="orange_collection_bg">#BB4802</color>
 
+    <color name="button_green">#406159</color>
+
     <!--colors for Collections texts-->
     <color name="purple_collections_txt">#D9DAEC</color>
     <color name="blue_collection_txt">#D2F1FF</color>

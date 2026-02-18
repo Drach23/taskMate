@@ -1,6 +1,7 @@
 package com.example.taskmate;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -59,21 +60,43 @@ public class TaskViewActivity extends AppCompatActivity {
             return;
         }
 
-        // ===== VIEWMODEL =====
         viewModel = new ViewModelProvider(this)
                 .get(CollectionViewModel.class);
 
-        // ===== DATABASE =====
         database = AppDatabase.getInstance(this);
 
-        // ===== RECYCLER =====
         RecyclerView recyclerView = findViewById(R.id.taskRecycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         taskAdapter = new TaskAdapter();
         recyclerView.setAdapter(taskAdapter);
 
-        // ===== OBSERVAR COLECCIÓN =====
+        // LISTENERS DEL ADAPTER
+
+        taskAdapter.setOnTaskLongClickListener((task, position) -> {
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Eliminar tarea")
+                    .setMessage("¿Estás seguro de que quieres eliminar esta tarea?")
+                    .setPositiveButton("Eliminar", (dialog, which) -> {
+
+                        Executors.newSingleThreadExecutor().execute(() ->
+                                database.taskDao().delete(task)
+                        );
+
+                        showMessage("Tarea eliminada");
+                    })
+                    .setNegativeButton("Cancelar", null)
+                    .show();
+        });
+
+        taskAdapter.setOnTaskClickListener(task -> {
+
+            Intent intent = new Intent(TaskViewActivity.this, TaskDetailActivity.class);
+            intent.putExtra("taskId", task.getId());
+            startActivity(intent);
+        });
+
         viewModel.getCollection(collectionId)
                 .observe(this, collection -> {
 
@@ -91,21 +114,17 @@ public class TaskViewActivity extends AppCompatActivity {
                     etCollectionTitle.setBackgroundColor(backgroundColor);
                     etCollectionTitle.setTextColor(textColor);
 
-                    // 🔥 AQUÍ SE PASAN LOS COLORES AL ADAPTER
                     taskAdapter.setTheme(backgroundColor, textColor);
                 });
 
-        // ===== OBSERVAR TAREAS =====
         database.taskDao()
                 .getTasksForCollection(collectionId)
                 .observe(this, tasks -> {
                     taskAdapter.setTasks(tasks);
                 });
 
-        // ===== EDITAR COLECCIÓN =====
         etCollectionTitle.setOnClickListener(v -> showEditCollectionDialog());
 
-        // ===== FAB =====
         FloatingActionButton fab = findViewById(R.id.taskFabAdd);
         fab.setOnClickListener(v -> showAddTaskDialog());
 
@@ -116,9 +135,6 @@ public class TaskViewActivity extends AppCompatActivity {
         });
     }
 
-    // =========================
-    // ADD TASK
-    // =========================
     private void showAddTaskDialog() {
 
         View view = LayoutInflater.from(this)
@@ -157,7 +173,6 @@ public class TaskViewActivity extends AppCompatActivity {
                     calendar.get(Calendar.DAY_OF_MONTH)
             );
 
-            // No permitir fechas anteriores a hoy
             datePickerDialog.getDatePicker()
                     .setMinDate(System.currentTimeMillis() - 1000);
 
@@ -192,10 +207,6 @@ public class TaskViewActivity extends AppCompatActivity {
                 .show();
     }
 
-
-    // =========================
-    // EDIT COLLECTION
-    // =========================
     private void showEditCollectionDialog() {
 
         if (currentCollection == null) return;
@@ -253,9 +264,6 @@ public class TaskViewActivity extends AppCompatActivity {
         builder.show();
     }
 
-    // =========================
-    // THEME
-    // =========================
     private void applyTheme(String theme) {
 
         switch (theme) {
