@@ -13,16 +13,21 @@ public class TaskModel {
     private String description;
     private long dueDate;
     private String address;
+
+    private double latitude;
+    private double longitude;
+
     private boolean isCompleted;
     private int collectionId;
-
 
     public TaskModel(String title,
                      String description,
                      long dueDate,
                      boolean isCompleted,
                      int collectionId,
-                     String address) {
+                     String address,
+                     double latitude,
+                     double longitude) {
 
         this.title = title;
         this.description = description;
@@ -30,9 +35,11 @@ public class TaskModel {
         this.isCompleted = isCompleted;
         this.collectionId = collectionId;
         this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
-    // ===== ID =====
+
     public int getId() {
         return id;
     }
@@ -41,7 +48,7 @@ public class TaskModel {
         this.id = id;
     }
 
-    // ===== TITLE =====
+
     public String getTitle() {
         return title;
     }
@@ -50,7 +57,7 @@ public class TaskModel {
         this.title = title;
     }
 
-    // ===== DESCRIPTION =====
+
     public String getDescription() {
         return description;
     }
@@ -59,31 +66,13 @@ public class TaskModel {
         this.description = description;
     }
 
-    // ===== DUE DATE =====
+
     public long getDueDate() {
         return dueDate;
     }
 
     public void setDueDate(long dueDate) {
         this.dueDate = dueDate;
-    }
-
-    // ===== COMPLETED =====
-    public boolean isCompleted() {
-        return isCompleted;
-    }
-
-    public void setCompleted(boolean completed) {
-        isCompleted = completed;
-    }
-
-    // ===== COLLECTION ID =====
-    public int getCollectionId() {
-        return collectionId;
-    }
-
-    public void setCollectionId(int collectionId) {
-        this.collectionId = collectionId;
     }
 
 
@@ -93,5 +82,41 @@ public class TaskModel {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
+
+    public boolean isCompleted() {
+        return isCompleted;
+    }
+
+    public void setCompleted(boolean completed) {
+        isCompleted = completed;
+    }
+
+
+    public int getCollectionId() {
+        return collectionId;
+    }
+
+    public void setCollectionId(int collectionId) {
+        this.collectionId = collectionId;
     }
 }

@@ -2,6 +2,8 @@ package com.example.taskmate;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,9 +26,11 @@ import com.example.taskmate.data.CollectionModel;
 import com.example.taskmate.data.TaskModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 
@@ -210,25 +214,110 @@ public class TaskViewActivity extends AppCompatActivity {
                 .setPositiveButton("Guardar", (dialog, which) -> {
 
                     String title = etTitle.getText().toString().trim();
-                    String location = etLocation.getText().toString().trim(); // NUEVO
+                    String location = etLocation.getText().toString().trim();
 
                     if (title.isEmpty() || selectedDate[0] == 0 || location.isEmpty()) {
                         showMessage("Completa todos los campos");
                         return;
                     }
 
-                    TaskModel task = new TaskModel(
-                            title,
-                            "", // descripción sigue igual
-                            selectedDate[0],
-                            false,
-                            collectionId,
-                            location
-                    );
+                    Executors.newSingleThreadExecutor().execute(() -> {
 
-                    Executors.newSingleThreadExecutor().execute(() ->
-                            database.taskDao().insert(task)
-                    );
+                        try {
+                            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                            List<Address> addresses = geocoder.getFromLocationName(location, 1);
+
+                            if (addresses == null || addresses.isEmpty()) {
+                                runOnUiThread(() ->
+                                        showMessage("No se pudo encontrar la ubicación")
+                                );
+                                return;
+                            }
+
+                            Address address = addresses.get(0);
+                            double latitude = address.getLatitude();
+                            double longitude = address.getLongitude();
+
+                            TaskModel task = new TaskModel(
+                                    title,
+                                    "", // descripción igual
+                                    selectedDate[0],
+                                    false,
+                                    collectionId,
+                                    location,
+                                    latitude,
+                                    longitude
+                            );
+
+                            database.taskDao().insert(task);
+
+                            runOnUiThread(() ->
+                                    showMessage("Tarea guardada con ubicación")
+                            );
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            runOnUiThread(() ->
+                                    showMessage("Error al obtener coordenadas")
+                            );
+                        }
+                    });
+
+                });
+        new AlertDialog.Builder(this)
+                .setTitle("Nueva Tarea")
+                .setView(view)
+                .setPositiveButton("Guardar", (dialog, which) -> {
+
+                    String title = etTitle.getText().toString().trim();
+                    String location = etLocation.getText().toString().trim();
+
+                    if (title.isEmpty() || selectedDate[0] == 0 || location.isEmpty()) {
+                        showMessage("Completa todos los campos");
+                        return;
+                    }
+
+                    Executors.newSingleThreadExecutor().execute(() -> {
+
+                        try {
+                            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                            List<Address> addresses = geocoder.getFromLocationName(location, 1);
+
+                            if (addresses == null || addresses.isEmpty()) {
+                                runOnUiThread(() ->
+                                        showMessage("No se pudo encontrar la ubicación")
+                                );
+                                return;
+                            }
+
+                            Address address = addresses.get(0);
+                            double latitude = address.getLatitude();
+                            double longitude = address.getLongitude();
+
+                            TaskModel task = new TaskModel(
+                                    title,
+                                    "",
+                                    selectedDate[0],
+                                    false,
+                                    collectionId,
+                                    location,
+                                    latitude,
+                                    longitude
+                            );
+
+                            database.taskDao().insert(task);
+
+                            runOnUiThread(() ->
+                                    showMessage("Tarea guardada con ubicación")
+                            );
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            runOnUiThread(() ->
+                                    showMessage("Error al obtener coordenadas")
+                            );
+                        }
+                    });
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
@@ -334,6 +423,25 @@ public class TaskViewActivity extends AppCompatActivity {
             case "green": return 3;
             case "orange": return 4;
             default: return 0;
+        }
+    }
+
+    private void getLocation(String direccion, TaskModel task) {
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+
+        try {
+            List<Address> direcciones = geocoder.getFromLocationName(direccion, 1);
+
+            if (direcciones != null && !direcciones.isEmpty()) {
+                Address address = direcciones.get(0);
+                task.setLatitude(address.getLatitude());
+                task.setLongitude(address.getLongitude());
+            } else {
+                Toast.makeText(this, "Dirección no encontrada", Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

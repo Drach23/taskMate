@@ -34,6 +34,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.play.services.location)
     val room_version = "2.8.4"
 
     implementation("androidx.room:room-runtime:$room_version")

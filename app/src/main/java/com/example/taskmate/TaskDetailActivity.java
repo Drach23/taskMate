@@ -38,6 +38,8 @@ public class TaskDetailActivity extends AppCompatActivity {
     private Button btnDelete;
     private Button btnRoute;
 
+    private Button btnPlan;
+
     private int taskId;
     private long selectedDate;
 
@@ -56,6 +58,7 @@ public class TaskDetailActivity extends AppCompatActivity {
         btnSave = findViewById(R.id.buttonSave);
         btnDelete = findViewById(R.id.buttonDelete);
         btnRoute = findViewById(R.id.btnCalculateRoute);
+        btnPlan = findViewById(R.id.btnPlanRoute);
 
         taskId = getIntent().getIntExtra("taskId", -1);
 
@@ -70,7 +73,13 @@ public class TaskDetailActivity extends AppCompatActivity {
         btnSave.setOnClickListener(v -> updateTask());
         btnDelete.setOnClickListener(v -> confirmDelete());
         btnRoute.setOnClickListener(v -> showDestinationSelector());
+        btnPlan.setOnClickListener(v -> {
+            Intent intent = new Intent(TaskDetailActivity.this, PlanificationActivity.class);
+            startActivity(intent);
+        });
     }
+
+
 
     private void loadTask() {
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -95,33 +104,31 @@ public class TaskDetailActivity extends AppCompatActivity {
         });
     }
 
-    // =========================
-    // NUEVA LÓGICA DE RUTA
-    // =========================
+
 
     private void showDestinationSelector() {
 
         if (currentTask == null ||
-                currentTask.getAddress() == null ||
-                currentTask.getAddress().trim().isEmpty()) {
+                currentTask.getLatitude() == 0.0 ||
+                currentTask.getLongitude() == 0.0) {
 
             Toast.makeText(this,
-                    "La tarea actual no tiene ubicación válida",
+                    "La tarea actual no tiene coordenadas válidas",
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
         Executors.newSingleThreadExecutor().execute(() -> {
 
-            List<TaskModel> allTasks =
-                    database.taskDao().getAllTasks();
-
-            // Filtrar: quitar tarea actual
+            List<TaskModel> allTasks = database.taskDao().getAllTasks();
             List<TaskModel> filteredTasks = new ArrayList<>();
+
             for (TaskModel task : allTasks) {
                 if (task.getId() != currentTask.getId()
-                        && task.getAddress() != null
-                        && !task.getAddress().trim().isEmpty()) {
+                        && !task.isCompleted()
+                        && task.getLatitude() != 0.0
+                        && task.getLongitude() != 0.0) {
+
                     filteredTasks.add(task);
                 }
             }
@@ -130,15 +137,15 @@ public class TaskDetailActivity extends AppCompatActivity {
 
                 if (filteredTasks.isEmpty()) {
                     Toast.makeText(this,
-                            "No hay otras tareas con ubicación",
+                            "No hay otras tareas disponibles",
                             Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 String[] taskTitles = new String[filteredTasks.size()];
+
                 for (int i = 0; i < filteredTasks.size(); i++) {
-                    taskTitles[i] = filteredTasks.get(i).getTitle()
-                            + " (" + filteredTasks.get(i).getAddress() + ")";
+                    taskTitles[i] = filteredTasks.get(i).getTitle();
                 }
 
                 new AlertDialog.Builder(this)
@@ -148,30 +155,29 @@ public class TaskDetailActivity extends AppCompatActivity {
                             TaskModel selectedTask =
                                     filteredTasks.get(which);
 
-                            openGoogleMaps(
-                                    currentTask.getAddress(),
-                                    selectedTask.getAddress()
-                            );
+                            openNavigation(currentTask, selectedTask);
                         })
                         .show();
             });
         });
     }
 
-    private void openGoogleMaps(String origin, String destination) {
+
+
+    private void openNavigation(TaskModel origin, TaskModel destination) {
 
         String uri = "https://www.google.com/maps/dir/?api=1"
-                + "&origin=" + Uri.encode(origin)
-                + "&destination=" + Uri.encode(destination)
+                + "&origin=" + origin.getLatitude() + "," + origin.getLongitude()
+                + "&destination=" + destination.getLatitude() + "," + destination.getLongitude()
                 + "&travelmode=driving";
 
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        intent.setPackage("com.google.android.apps.maps");
+
         startActivity(intent);
     }
 
-    // =========================
-    // RESTO DEL CÓDIGO ORIGINAL
-    // =========================
+
 
     private void openDatePicker() {
 
@@ -204,6 +210,10 @@ public class TaskDetailActivity extends AppCompatActivity {
         tvDate.setText(sdf.format(new Date(selectedDate)));
     }
 
+    // =========================
+    // ACTUALIZAR TAREA
+    // =========================
+
     private void updateTask() {
 
         if (currentTask == null) return;
@@ -222,9 +232,7 @@ public class TaskDetailActivity extends AppCompatActivity {
         }
 
         currentTask.setTitle(newTitle);
-        currentTask.setDescription(
-                etDescription.getText().toString().trim()
-        );
+        currentTask.setDescription(etDescription.getText().toString().trim());
         currentTask.setAddress(newLocation);
         currentTask.setCompleted(checkCompleted.isChecked());
         currentTask.setDueDate(selectedDate);
@@ -236,6 +244,10 @@ public class TaskDetailActivity extends AppCompatActivity {
         Toast.makeText(this, "Tarea actualizada", Toast.LENGTH_LONG).show();
         finish();
     }
+
+    // =========================
+    // ELIMINAR TAREA
+    // =========================
 
     private void confirmDelete() {
 
