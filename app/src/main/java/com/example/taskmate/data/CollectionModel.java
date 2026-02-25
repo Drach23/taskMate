@@ -14,10 +14,13 @@ public class CollectionModel {
 
     private String color;
 
+    private int taskCount;
+
     public CollectionModel(String title, int quantity, String color){
         this.title = title;
         this.quantity = quantity;
         this.color = color;
+        this.taskCount = 0;
     }
 
     public int getId() {
@@ -50,6 +53,14 @@ public class CollectionModel {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public int getTaskCount() {
+        return taskCount;
+    }
+
+    public void setTaskCount(int taskCount) {
+        this.taskCount = taskCount;
     }
 }
 

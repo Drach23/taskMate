@@ -54,9 +54,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         this.longClickListener = listener;
     }
 
-    public void setOnTaskCheckedListener(OnTaskCheckedListener listener) {
-        this.checkedListener = listener;
-    }
+
 
     // =========================
     // RECIBE COLORES DESDE ACTIVITY
@@ -86,13 +84,15 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         return new TaskViewHolder(view);
     }
 
-    // =========================
+
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
 
         TaskModel task = taskList.get(position);
 
         holder.tvTitle.setText(task.getTitle());
+
+
 
         SimpleDateFormat sdf =
                 new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
@@ -101,16 +101,27 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 sdf.format(new Date(task.getDueDate()))
         );
 
-        // Evita bug de reciclado
+        // ===== CHECKBOX =====
         holder.checkCompleted.setOnCheckedChangeListener(null);
         holder.checkCompleted.setChecked(task.isCompleted());
 
+        holder.checkCompleted.setEnabled(false);
+        holder.checkCompleted.setClickable(false);
+
         holder.checkCompleted.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+            int currentPosition = holder.getBindingAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION) return;
+
             if (checkedListener != null) {
-                checkedListener.onTaskChecked(task, isChecked);
+                checkedListener.onTaskChecked(
+                        taskList.get(currentPosition),
+                        isChecked
+                );
             }
         });
 
+        // ===== THEME =====
         if (backgroundColor != 0) {
             holder.cardView.setCardBackgroundColor(backgroundColor);
         }
@@ -120,7 +131,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             holder.tvDate.setTextColor(textColor);
         }
 
-        // CLICK NORMAL
+        // ===== CLICK NORMAL =====
         holder.cardView.setOnClickListener(v -> {
 
             int currentPosition = holder.getBindingAdapterPosition();
@@ -131,20 +142,22 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             }
         });
 
-        // LONG CLICK
+        // ===== LONG CLICK =====
         holder.cardView.setOnLongClickListener(v -> {
 
             int currentPosition = holder.getBindingAdapterPosition();
-            if (currentPosition == RecyclerView.NO_POSITION);
+            if (currentPosition == RecyclerView.NO_POSITION) return true;
 
             if (longClickListener != null) {
-                longClickListener.onLongClick(taskList.get(currentPosition), currentPosition);
+                longClickListener.onLongClick(
+                        taskList.get(currentPosition),
+                        currentPosition
+                );
             }
 
             return true;
         });
     }
-
     // =========================
     @Override
     public int getItemCount() {

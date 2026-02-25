@@ -29,6 +29,12 @@ public interface TaskDao {
     @Query("SELECT * FROM tasks")
     List<TaskModel> getAllTasks();
 
+    @Query("UPDATE tasks SET isCompleted = :completed WHERE id = :taskId")
+    void updateTaskCompleted(int taskId, boolean completed);
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE collectionId = :collectionId AND isCompleted = 0")
+    int getActiveTaskCount(int collectionId);
+
     @Query("SELECT * FROM tasks WHERE collectionId = :collectionId AND isCompleted = 1 ORDER BY dueDate DESC")
     LiveData<List<TaskModel>> getCompletedTasks(int collectionId);
 

@@ -98,9 +98,12 @@ public class TaskViewActivity extends AppCompatActivity {
                     .setMessage("¿Estás seguro de que quieres eliminar esta tarea?")
                     .setPositiveButton("Eliminar", (dialog, which) -> {
 
-                        Executors.newSingleThreadExecutor().execute(() ->
-                                database.taskDao().delete(task)
-                        );
+                        Executors.newSingleThreadExecutor().execute(() -> {
+
+                            database.taskDao().delete(task);
+
+                            viewModel.updateTaskCount(collectionId);
+                        });
 
                         showMessage("Tarea eliminada");
                     })
@@ -250,6 +253,7 @@ public class TaskViewActivity extends AppCompatActivity {
                             );
 
                             database.taskDao().insert(task);
+                            viewModel.updateTaskCount(collectionId);
 
                             runOnUiThread(() ->
                                     showMessage("Tarea guardada con ubicación")

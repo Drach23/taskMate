@@ -12,9 +12,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.taskmate.data.AppDatabase;
 import com.example.taskmate.data.TaskModel;
+
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.concurrent.Executors;
 public class TaskDetailActivity extends AppCompatActivity {
 
     private AppDatabase database;
+    private CollectionViewModel collectionViewModel;
     private TaskModel currentTask;
 
     private EditText etTitle;
@@ -37,7 +40,6 @@ public class TaskDetailActivity extends AppCompatActivity {
     private Button btnSave;
     private Button btnDelete;
     private Button btnRoute;
-
     private Button btnPlan;
 
     private int taskId;
@@ -49,6 +51,8 @@ public class TaskDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_task_detail);
 
         database = AppDatabase.getInstance(this);
+        collectionViewModel = new ViewModelProvider(this)
+                .get(CollectionViewModel.class);
 
         etTitle = findViewById(R.id.detailTitle);
         tvDate = findViewById(R.id.detailDate);
@@ -79,8 +83,6 @@ public class TaskDetailActivity extends AppCompatActivity {
         });
     }
 
-
-
     private void loadTask() {
         Executors.newSingleThreadExecutor().execute(() -> {
 
@@ -104,7 +106,92 @@ public class TaskDetailActivity extends AppCompatActivity {
         });
     }
 
+    private void updateTask() {
 
+        if (currentTask == null) return;
+
+        String newTitle = etTitle.getText().toString().trim();
+        String newLocation = etLocation.getText().toString().trim();
+
+        if (newTitle.isEmpty()) {
+            etTitle.setError("El título no puede estar vacío");
+            return;
+        }
+
+        if (newLocation.isEmpty()) {
+            etLocation.setError("La ubicación no puede estar vacía");
+            return;
+        }
+
+        currentTask.setTitle(newTitle);
+        currentTask.setDescription(etDescription.getText().toString().trim());
+        currentTask.setAddress(newLocation);
+        currentTask.setCompleted(checkCompleted.isChecked());
+        currentTask.setDueDate(selectedDate);
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+
+            database.taskDao().update(currentTask);
+
+
+            collectionViewModel.updateTaskCount(currentTask.getCollectionId());
+        });
+
+        Toast.makeText(this, "Tarea actualizada", Toast.LENGTH_LONG).show();
+        finish();
+    }
+
+    private void confirmDelete() {
+
+        new AlertDialog.Builder(this)
+                .setTitle("Eliminar tarea")
+                .setMessage("¿Seguro que quieres eliminar esta tarea?")
+                .setPositiveButton("Eliminar", (dialog, which) -> {
+
+                    Executors.newSingleThreadExecutor().execute(() -> {
+
+                        database.taskDao().delete(currentTask);
+
+
+                        collectionViewModel.updateTaskCount(currentTask.getCollectionId());
+                    });
+
+                    finish();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void openDatePicker() {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(selectedDate);
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+
+                    Calendar selected = Calendar.getInstance();
+                    selected.set(year, month, dayOfMonth, 0, 0, 0);
+                    selected.set(Calendar.MILLISECOND, 0);
+
+                    selectedDate = selected.getTimeInMillis();
+                    updateDateText();
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+        dialog.show();
+    }
+
+    private void updateDateText() {
+        SimpleDateFormat sdf =
+                new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        tvDate.setText(sdf.format(new Date(selectedDate)));
+    }
 
     private void showDestinationSelector() {
 
@@ -162,8 +249,6 @@ public class TaskDetailActivity extends AppCompatActivity {
         });
     }
 
-
-
     private void openNavigation(TaskModel origin, TaskModel destination) {
 
         String uri = "https://www.google.com/maps/dir/?api=1"
@@ -175,94 +260,5 @@ public class TaskDetailActivity extends AppCompatActivity {
         intent.setPackage("com.google.android.apps.maps");
 
         startActivity(intent);
-    }
-
-
-
-    private void openDatePicker() {
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(selectedDate);
-
-        DatePickerDialog dialog = new DatePickerDialog(
-                this,
-                (view, year, month, dayOfMonth) -> {
-
-                    Calendar selected = Calendar.getInstance();
-                    selected.set(year, month, dayOfMonth, 0, 0, 0);
-                    selected.set(Calendar.MILLISECOND, 0);
-
-                    selectedDate = selected.getTimeInMillis();
-                    updateDateText();
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        );
-
-        dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
-        dialog.show();
-    }
-
-    private void updateDateText() {
-        SimpleDateFormat sdf =
-                new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        tvDate.setText(sdf.format(new Date(selectedDate)));
-    }
-
-    // =========================
-    // ACTUALIZAR TAREA
-    // =========================
-
-    private void updateTask() {
-
-        if (currentTask == null) return;
-
-        String newTitle = etTitle.getText().toString().trim();
-        String newLocation = etLocation.getText().toString().trim();
-
-        if (newTitle.isEmpty()) {
-            etTitle.setError("El título no puede estar vacío");
-            return;
-        }
-
-        if (newLocation.isEmpty()) {
-            etLocation.setError("La ubicación no puede estar vacía");
-            return;
-        }
-
-        currentTask.setTitle(newTitle);
-        currentTask.setDescription(etDescription.getText().toString().trim());
-        currentTask.setAddress(newLocation);
-        currentTask.setCompleted(checkCompleted.isChecked());
-        currentTask.setDueDate(selectedDate);
-
-        Executors.newSingleThreadExecutor().execute(() ->
-                database.taskDao().update(currentTask)
-        );
-
-        Toast.makeText(this, "Tarea actualizada", Toast.LENGTH_LONG).show();
-        finish();
-    }
-
-    // =========================
-    // ELIMINAR TAREA
-    // =========================
-
-    private void confirmDelete() {
-
-        new AlertDialog.Builder(this)
-                .setTitle("Eliminar tarea")
-                .setMessage("¿Seguro que quieres eliminar esta tarea?")
-                .setPositiveButton("Eliminar", (dialog, which) -> {
-
-                    Executors.newSingleThreadExecutor().execute(() ->
-                            database.taskDao().delete(currentTask)
-                    );
-
-                    finish();
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
     }
 }

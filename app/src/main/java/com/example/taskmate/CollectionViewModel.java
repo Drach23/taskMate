@@ -22,9 +22,7 @@ public class CollectionViewModel extends AndroidViewModel {
     public CollectionViewModel(@NonNull Application application) {
         super(application);
 
-        // USA TU SINGLETON, no Room.databaseBuilder aquí
         db = AppDatabase.getInstance(application);
-
         collections = db.collectionDao().getAllCollections();
     }
 
@@ -52,5 +50,22 @@ public class CollectionViewModel extends AndroidViewModel {
         executor.execute(() ->
                 db.collectionDao().delete(collection)
         );
+    }
+
+
+    public void updateTaskCount(int collectionId) {
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+
+            int count = db.taskDao().getActiveTaskCount(collectionId);
+
+            CollectionModel collection =
+                    db.collectionDao().getCollectionByIdSync(collectionId);
+
+            if (collection != null) {
+                collection.setTaskCount(count);
+                db.collectionDao().update(collection);
+            }
+        });
     }
 }

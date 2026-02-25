@@ -24,6 +24,12 @@ public interface CollectionDao {
     @Query("SELECT * FROM collections ORDER BY id DESC")
     LiveData<List<CollectionModel>> getAllCollections();
 
+    @Query("UPDATE collections SET taskCount = :count WHERE id = :collectionId")
+    void updateTaskCount(int collectionId, int count);
+
+    @Query("SELECT * FROM collections WHERE id = :id LIMIT 1")
+    CollectionModel getCollectionByIdSync(int id);
+
     @Query("SELECT * FROM collections WHERE id = :id")
     LiveData<CollectionModel> getCollection(int id);
 

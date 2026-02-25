@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.taskmate.R;
 import com.example.taskmate.data.CollectionModel;
+import com.example.taskmate.data.AppDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,10 +62,21 @@ public class CollectionAdapter
 
         holder.titleTextView.setText(collection.getTitle());
 
-        holder.quantityTextView.setText(
-                holder.itemView.getContext()
-                        .getString(R.string.tasks_pending, collection.getQuantity())
-        );
+        AppDatabase db = AppDatabase.getInstance(holder.itemView.getContext());
+
+        new Thread(() -> {
+
+            int count = db.taskDao()
+                    .getActiveTaskCount(collection.getId());
+
+            holder.itemView.post(() ->
+                    holder.quantityTextView.setText(
+                            holder.itemView.getContext()
+                                    .getString(R.string.tasks_pending, count)
+                    )
+            );
+
+        }).start();
 
         applyTheme(holder, collection.getColor());
 
