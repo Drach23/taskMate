@@ -24,7 +24,13 @@ public interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id")
     TaskModel getTaskById(int id);
 
-    @Query("SELECT * FROM tasks WHERE collectionId = :collectionId ORDER BY dueDate ASC")
-    LiveData<List<TaskModel>> getTasksForCollection(int collectionId);
+    @Query("SELECT * FROM tasks WHERE collectionId = :collectionId AND isCompleted = 0 ORDER BY dueDate ASC")
+    LiveData<List<TaskModel>> getActiveTasks(int collectionId);
+    @Query("SELECT * FROM tasks")
+    List<TaskModel> getAllTasks();
+
+    @Query("SELECT * FROM tasks WHERE collectionId = :collectionId AND isCompleted = 1 ORDER BY dueDate DESC")
+    LiveData<List<TaskModel>> getCompletedTasks(int collectionId);
+
 
 }

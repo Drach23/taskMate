@@ -37,6 +37,18 @@
             android:textColor="@color/purple_collections_txt"
             android:layout_marginBottom="32dp"/>
 
+        <EditText
+            android:id="@+id/detailLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:background="@android:color/transparent"
+            android:textColorHint="@color/purple_collections_txt"
+            android:hint="Ubicacion del viaje"
+            android:layout_marginBottom="6dp"/>
+
         <!-- Card principal -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -110,6 +122,19 @@
             app:backgroundTint="@android:color/holo_red_dark"
             android:textColor="@android:color/white"
             android:textSize="16sp"/>
+
+        <!-- Botón Ruta -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCalculateRoute"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Calcular ruta desde aqui"
+            android:layout_marginTop="14dp"
+            app:cornerRadius="30dp"
+            app:backgroundTint="@color/purple_dark"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"/>
+
 
     </LinearLayout>
 

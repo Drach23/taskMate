@@ -3,6 +3,7 @@ package com.example.taskmate.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -37,8 +38,13 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         void onLongClick(TaskModel task, int position);
     }
 
+    public interface OnTaskCheckedListener {
+        void onTaskChecked(TaskModel task, boolean isChecked);
+    }
+
     private OnTaskClickListener clickListener;
     private OnTaskLongClickListener longClickListener;
+    private OnTaskCheckedListener checkedListener;
 
     public void setOnTaskClickListener(OnTaskClickListener listener) {
         this.clickListener = listener;
@@ -46,6 +52,10 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     public void setOnTaskLongClickListener(OnTaskLongClickListener listener) {
         this.longClickListener = listener;
+    }
+
+    public void setOnTaskCheckedListener(OnTaskCheckedListener listener) {
+        this.checkedListener = listener;
     }
 
     // =========================
@@ -91,6 +101,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 sdf.format(new Date(task.getDueDate()))
         );
 
+        // Evita bug de reciclado
+        holder.checkCompleted.setOnCheckedChangeListener(null);
+        holder.checkCompleted.setChecked(task.isCompleted());
+
+        holder.checkCompleted.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (checkedListener != null) {
+                checkedListener.onTaskChecked(task, isChecked);
+            }
+        });
+
         if (backgroundColor != 0) {
             holder.cardView.setCardBackgroundColor(backgroundColor);
         }
@@ -114,8 +134,11 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         // LONG CLICK
         holder.cardView.setOnLongClickListener(v -> {
 
+            int currentPosition = holder.getBindingAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION);
+
             if (longClickListener != null) {
-                longClickListener.onLongClick(task, position);
+                longClickListener.onLongClick(taskList.get(currentPosition), currentPosition);
             }
 
             return true;
@@ -134,6 +157,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         TextView tvTitle;
         TextView tvDate;
         CardView cardView;
+        CheckBox checkCompleted;
 
         public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -141,6 +165,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             tvTitle = itemView.findViewById(R.id.textTaskTitle);
             tvDate = itemView.findViewById(R.id.textTaskDueDate);
             cardView = itemView.findViewById(R.id.cardTask);
+            checkCompleted = itemView.findViewById(R.id.checkTask);
         }
     }
 }

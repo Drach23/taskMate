@@ -34,40 +34,82 @@
             android:textSize="20sp"
             android:textColor="@android:color/white"
             android:gravity="center"
-            android:fontFamily="@font/figtree_regular"
             android:background="@color/purple_collection_bg"
             android:focusable="false"
             android:clickable="true"
             android:cursorVisible="false"
-            android:inputType="text"
             android:padding="16dp"
             android:layout_marginBottom="16dp"
-            android:layout_marginStart="0dp"
-            android:layout_marginEnd="0dp"
             android:singleLine="true"
             android:ellipsize="end"/>
 
-
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/taskRecycler"
+        <!-- Scroll general -->
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- ACTIVAS -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerActive"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"/>
+
+                <!-- HEADER COMPLETADAS -->
+                <LinearLayout
+                    android:id="@+id/layoutCompletedHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:orientation="horizontal"
+                    android:background="@color/purple_dark">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Completadas"
+                        android:textColor="@color/off_white"
+                        android:textStyle="bold"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:id="@+id/tvToggleCompleted"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="▼"
+                        android:textColor="@color/off_white"/>
+                </LinearLayout>
+
+                <!-- COMPLETADAS -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerCompleted"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    android:nestedScrollingEnabled="false"/>
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
 
     </LinearLayout>
 
+    <!-- FAB RESTAURADO -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/taskFabAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="17dp"
-        android:layout_marginBottom="25dp"
-        android:contentDescription="Agregar"
-        android:src="@android:drawable/ic_input_add"
+        android:layout_margin="20dp"
         android:layout_gravity="bottom|end"
+        android:src="@android:drawable/ic_input_add"
         android:backgroundTint="@color/purple_dark"/>
-
-
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -7,15 +7,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -43,8 +41,12 @@ public class TaskViewActivity extends AppCompatActivity {
     private EditText etCollectionTitle;
     private CollectionModel currentCollection;
 
-    private TaskAdapter taskAdapter;
+    private TaskAdapter activeAdapter;
+    private TaskAdapter completedAdapter;
+
     private AppDatabase database;
+
+    private boolean completedVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,15 +67,27 @@ public class TaskViewActivity extends AppCompatActivity {
 
         database = AppDatabase.getInstance(this);
 
-        RecyclerView recyclerView = findViewById(R.id.taskRecycler);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        RecyclerView recyclerActive = findViewById(R.id.recyclerActive);
+        RecyclerView recyclerCompleted = findViewById(R.id.recyclerCompleted);
+        LinearLayout headerCompleted = findViewById(R.id.layoutCompletedHeader);
 
-        taskAdapter = new TaskAdapter();
-        recyclerView.setAdapter(taskAdapter);
+        recyclerActive.setLayoutManager(new LinearLayoutManager(this));
+        recyclerCompleted.setLayoutManager(new LinearLayoutManager(this));
 
-        // LISTENERS DEL ADAPTER
+        activeAdapter = new TaskAdapter();
+        completedAdapter = new TaskAdapter();
 
-        taskAdapter.setOnTaskLongClickListener((task, position) -> {
+        recyclerActive.setAdapter(activeAdapter);
+        recyclerCompleted.setAdapter(completedAdapter);
+
+        headerCompleted.setOnClickListener(v -> {
+            completedVisible = !completedVisible;
+            recyclerCompleted.setVisibility(
+                    completedVisible ? View.VISIBLE : View.GONE
+            );
+        });
+
+        activeAdapter.setOnTaskLongClickListener((task, position) -> {
 
             new AlertDialog.Builder(this)
                     .setTitle("Eliminar tarea")
@@ -90,8 +104,13 @@ public class TaskViewActivity extends AppCompatActivity {
                     .show();
         });
 
-        taskAdapter.setOnTaskClickListener(task -> {
+        activeAdapter.setOnTaskClickListener(task -> {
+            Intent intent = new Intent(TaskViewActivity.this, TaskDetailActivity.class);
+            intent.putExtra("taskId", task.getId());
+            startActivity(intent);
+        });
 
+        completedAdapter.setOnTaskClickListener(task -> {
             Intent intent = new Intent(TaskViewActivity.this, TaskDetailActivity.class);
             intent.putExtra("taskId", task.getId());
             startActivity(intent);
@@ -114,25 +133,26 @@ public class TaskViewActivity extends AppCompatActivity {
                     etCollectionTitle.setBackgroundColor(backgroundColor);
                     etCollectionTitle.setTextColor(textColor);
 
-                    taskAdapter.setTheme(backgroundColor, textColor);
+                    activeAdapter.setTheme(backgroundColor, textColor);
+                    completedAdapter.setTheme(backgroundColor, textColor);
                 });
 
         database.taskDao()
-                .getTasksForCollection(collectionId)
+                .getActiveTasks(collectionId)
                 .observe(this, tasks -> {
-                    taskAdapter.setTasks(tasks);
+                    activeAdapter.setTasks(tasks);
+                });
+
+        database.taskDao()
+                .getCompletedTasks(collectionId)
+                .observe(this, tasks -> {
+                    completedAdapter.setTasks(tasks);
                 });
 
         etCollectionTitle.setOnClickListener(v -> showEditCollectionDialog());
 
         FloatingActionButton fab = findViewById(R.id.taskFabAdd);
         fab.setOnClickListener(v -> showAddTaskDialog());
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
     }
 
     private void showAddTaskDialog() {
@@ -142,9 +162,11 @@ public class TaskViewActivity extends AppCompatActivity {
 
         EditText etTitle = view.findViewById(R.id.etTaskTitle);
         EditText etDueDate = view.findViewById(R.id.etTaskDueDate);
+        EditText etLocation = view.findViewById(R.id.etTaskAddress);
 
         etTitle.setTextColor(textColor);
         etDueDate.setTextColor(textColor);
+        etLocation.setTextColor(textColor); // NUEVO
 
         final long[] selectedDate = {0};
 
@@ -158,6 +180,9 @@ public class TaskViewActivity extends AppCompatActivity {
 
                         Calendar selected = Calendar.getInstance();
                         selected.set(year, month, day);
+                        selected.set(Calendar.HOUR_OF_DAY, 0);
+                        selected.set(Calendar.MINUTE, 0);
+                        selected.set(Calendar.SECOND, 0);
 
                         selectedDate[0] = selected.getTimeInMillis();
 
@@ -185,18 +210,20 @@ public class TaskViewActivity extends AppCompatActivity {
                 .setPositiveButton("Guardar", (dialog, which) -> {
 
                     String title = etTitle.getText().toString().trim();
+                    String location = etLocation.getText().toString().trim(); // NUEVO
 
-                    if (title.isEmpty() || selectedDate[0] == 0) {
+                    if (title.isEmpty() || selectedDate[0] == 0 || location.isEmpty()) {
                         showMessage("Completa todos los campos");
                         return;
                     }
 
                     TaskModel task = new TaskModel(
                             title,
-                            "",
+                            "", // descripción sigue igual
                             selectedDate[0],
                             false,
-                            collectionId
+                            collectionId,
+                            location
                     );
 
                     Executors.newSingleThreadExecutor().execute(() ->

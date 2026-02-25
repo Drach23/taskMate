@@ -12,20 +12,24 @@ public class TaskModel {
     private String title;
     private String description;
     private long dueDate;
+    private String address;
     private boolean isCompleted;
     private int collectionId;
+
 
     public TaskModel(String title,
                      String description,
                      long dueDate,
                      boolean isCompleted,
-                     int collectionId) {
+                     int collectionId,
+                     String address) {
 
         this.title = title;
         this.description = description;
         this.dueDate = dueDate;
         this.isCompleted = isCompleted;
         this.collectionId = collectionId;
+        this.address = address;
     }
 
     // ===== ID =====
@@ -80,5 +84,14 @@ public class TaskModel {
 
     public void setCollectionId(int collectionId) {
         this.collectionId = collectionId;
+    }
+
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

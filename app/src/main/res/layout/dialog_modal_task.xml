@@ -13,12 +13,19 @@
         android:layout_height="wrap_content"/>
 
     <EditText
+        android:id="@+id/etTaskAddress"
+        android:hint="Dirección (Ej: Parque Agua Azul, Jalisco, Mexico)"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"/>
+
+    <EditText
         android:id="@+id/etTaskDueDate"
         android:hint="Seleccionar fecha"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:focusable="false"
         android:clickable="true"/>
-
 
 </LinearLayout>
